@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  phone         String?
+  points        Int       @default(0)
+  level         String    @default("bronze")
+  totalRecycled Int       @default(0)
+  co2Saved      Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  transactions  Transaction[]
+  achievements  UserAchievement[]
+  sessions      Session[]
+  
+  @@map("users")
+}
+
+model Bin {
+  id              String    @id @default(cuid())
+  name            String
+  latitude        Float
+  longitude       Float
+  address         String
+  acceptedTypes   String    // JSON array of waste types
+  currentFill     Int       @default(0)
+  maxCapacity     Int
+  status          String    @default("operational") // operational, full, maintenance
+  lastEmptied     DateTime?
+  qrCode          String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  transactions    Transaction[]
+  maintenance     Maintenance[]
+  
+  @@map("bins")
+}
+
+model Transaction {
+  id              String    @id @default(cuid())
+  userId          String
+  binId           String
+  itemType        String
+  itemDescription String?
+  confidence      Float
+  estimatedValue  Float
+  pointsEarned    Int
+  image           String?   // URL to stored image
+  weight          Float?
+  timestamp       DateTime  @default(now())
+  
+  user            User      @relation(fields: [userId], references: [id])
+  bin             Bin       @relation(fields: [binId], references: [id])
+  
+  @@map("transactions")
+}
+
+model Achievement {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  points      Int
+  requirement String // JSON object describing requirements
+  
+  users       UserAchievement[]
+  
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id             String    @id @default(cuid())
+  userId         String
+  achievementId  String
+  unlockedAt     DateTime  @default(now())
+  
+  user           User      @relation(fields: [userId], references: [id])
+  achievement    Achievement @relation(fields: [achievementId], references: [id])
+  
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Maintenance {
+  id          String   @id @default(cuid())
+  binId       String
+  type        String   // repair, cleaning, empty
+  status      String   @default("pending") // pending, in_progress, completed
+  scheduledAt DateTime?
+  completedAt DateTime?
+  notes       String?
+  
+  bin         Bin      @relation(fields: [binId], references: [id])
+  
+  @@map("maintenance")
+}
+
+model Reward {
+  id          String  @id @default(cuid())
+  title       String
+  description String
+  pointsCost  Int
+  type        String  // discount, voucher, product
+  partner     String?
+  imageUrl    String?
+  active      Boolean @default(true)
+  
+  @@map("rewards")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id])
+  
+  @@map("sessions")
+}
