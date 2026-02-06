@@ -2,7 +2,17 @@
 
 A comprehensive, AI-powered e-waste recycling platform with location-based bin finding, intelligent waste detection, and gamified rewards system. Built with cutting-edge technology and CEO-level UI/UX design.
 
-## 📄 Submission Idea File
+## � **Live Demo**
+**Deployed Application**: [https://e-w-a-s-t-e.netlify.app/](https://e-w-a-s-t-e.netlify.app/)
+
+Experience the Smart Bin System with:
+- 🤖 AI-powered waste detection
+- 🗺️ Interactive bin finder
+- 📷 Camera capture functionality
+- 🎨 Modern, responsive UI
+- 📱 Mobile-optimized design
+
+## �📄 Submission Idea File
 
 ### Problem
 E-waste recycling is fragmented and inconvenient. Users do not know where to dispose items, how to verify item type, or what impact their actions create. Municipalities and operators struggle to monitor bins in real time, optimize collection routes, and motivate consistent recycling behavior.
