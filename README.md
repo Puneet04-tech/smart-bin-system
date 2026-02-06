@@ -2,6 +2,21 @@
 
 A comprehensive, AI-powered e-waste recycling platform with location-based bin finding, intelligent waste detection, and gamified rewards system. Built with cutting-edge technology and CEO-level UI/UX design.
 
+## 📄 Submission Idea File
+
+### Problem
+E-waste recycling is fragmented and inconvenient. Users do not know where to dispose items, how to verify item type, or what impact their actions create. Municipalities and operators struggle to monitor bins in real time, optimize collection routes, and motivate consistent recycling behavior.
+
+### Solution
+Smart E-Waste Bin System delivers an end-to-end platform that combines AI-assisted item detection, real-time bin discovery, and gamified rewards to make recycling easy and rewarding. The system provides:
+- Intelligent waste detection with clear confidence scoring and explanations.
+- Location-based bin finder with live status and availability.
+- Admin analytics for performance, routing, and maintenance.
+- A rewards and achievement system to drive ongoing participation.
+
+### Impact
+The platform reduces recycling friction, improves bin utilization, and increases user engagement by making e-waste disposal accessible, verifiable, and rewarding.
+
 ## 🏆 Features
 
 ### 🗺️ Location-Based Bin Finder
