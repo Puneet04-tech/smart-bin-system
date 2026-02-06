@@ -10,19 +10,7 @@ interface DetectionResult {
   detectedObjects: string[];
 }
 
-let cocoModel: any = null;
-
-const eWasteTypes: Record<string, string> = {
-  'cell phone': 'smartphone',
-  'laptop': 'laptop',
-  'book': 'tablet',
-  'monitor': 'monitor',
-  'keyboard': 'keyboard',
-  'mouse': 'mouse',
-  'teddy bear': 'unknown', // Not e-waste
-  'cup': 'unknown', // Not e-waste
-  'chair': 'unknown', // Not e-waste
-};
+let cocoModel: coco.ObjectDetection | null = null;
 
 const eWasteClasses = ['cell phone', 'laptop', 'monitor', 'keyboard', 'mouse', 'remote', 'microwave', 'oven', 'toaster', 'hair drier'];
 
@@ -53,15 +41,25 @@ export async function analyzeImage(imageElement: HTMLImageElement): Promise<Dete
       }
     }
 
+    if (!cocoModel) {
+      return {
+        isEWaste: false,
+        itemType: 'error',
+        confidence: 0,
+        reasoning: ['Detection model is not available'],
+        detectedObjects: []
+      };
+    }
+
     console.log('🔍 Analyzing image with COCO-SSD...');
     
     // Use the image element directly with the model
-    const predictions = await cocoModel.estimateObjects(imageElement);
+    const predictions: coco.DetectedObject[] = await cocoModel.detect(imageElement);
     
     console.log('📊 Predictions:', predictions);
     
     // Filter for e-waste objects
-    const eWasteDetections = predictions.filter((pred: any) => 
+    const eWasteDetections = predictions.filter((pred) => 
       eWasteClasses.some(ewasteClass => 
         pred.class.toLowerCase().includes(ewasteClass.toLowerCase())
       )
@@ -69,7 +67,7 @@ export async function analyzeImage(imageElement: HTMLImageElement): Promise<Dete
 
     if (eWasteDetections.length > 0) {
       // Get the highest confidence detection
-      const bestDetection = eWasteDetections.reduce((best: any, current: any) =>
+      const bestDetection = eWasteDetections.reduce((best, current) =>
         current.score > best.score ? current : best
       );
 
@@ -106,12 +104,12 @@ export async function analyzeImage(imageElement: HTMLImageElement): Promise<Dete
           `${getDeviceDescription(itemType)}`,
           `Ready for recycling and rewards`
         ],
-        detectedObjects: eWasteDetections.map((d: any) => d.class)
+        detectedObjects: eWasteDetections.map((d) => d.class)
       };
     } else {
       // No e-waste detected, but check for any objects
       if (predictions.length > 0) {
-        const detectedObjects = predictions.map((p: any) => p.class);
+        const detectedObjects = predictions.map((p) => p.class);
         return {
           isEWaste: false,
           itemType: 'unknown',
