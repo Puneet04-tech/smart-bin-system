@@ -1,0 +1,20 @@
+# Environment Variables for Deployment
+# Copy this file to .env.production and fill in the values
+
+# NextAuth Configuration
+NEXTAUTH_URL=https://your-domain.vercel.app
+NEXTAUTH_SECRET=your-super-secret-key-here
+
+# Database Configuration (use external database for production)
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# Optional: Redis for caching (if using)
+REDIS_URL=redis://user:password@host:port
+
+# Optional: Pusher for real-time features (if using)
+PUSHER_APP_ID=your-pusher-app-id
+PUSHER_KEY=your-pusher-key
+PUSHER_SECRET=your-pusher-secret
+PUSHER_CLUSTER=your-pusher-cluster
+PUSHER_HOST=your-pusher-host
+PUSHER_PORT=your-pusher-port
