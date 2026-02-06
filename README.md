@@ -17,6 +17,71 @@ Smart E-Waste Bin System delivers an end-to-end platform that combines AI-assist
 ### Impact
 The platform reduces recycling friction, improves bin utilization, and increases user engagement by making e-waste disposal accessible, verifiable, and rewarding.
 
+### Target Users
+- Citizens who need fast, trustworthy guidance to recycle e-waste.
+- Municipal operators and recycling partners managing bin networks.
+- Campus or corporate sustainability teams tracking impact.
+
+### Goals and Success Criteria
+- Reduce user time to find a valid bin.
+- Increase correct e-waste identification confidence for users.
+- Improve operational visibility for bin fill levels and alerts.
+- Encourage repeat participation through rewards and achievements.
+
+### Technical Approach
+- **Frontend**: Next.js App Router with TypeScript and framer-motion for UI clarity and responsiveness.
+- **Detection**: Client-side COCO-SSD pretrained model for object detection with confidence scoring and mapped e-waste classes.
+- **Bin Finder**: Interactive map with filters and real-time bin metadata (status, capacity, accepted items).
+- **Admin Analytics**: Dashboard views for trends, alerts, and operational summaries.
+- **Gamification**: Points, achievements, and leaderboards to reinforce consistent behavior.
+
+### Architecture Overview
+- **Client UI**: All user flows (finder, detection, rewards, admin) rendered in the browser.
+- **API Routes**: Next.js API endpoints serve dynamic data and mock integrations.
+- **Data Layer**: Prisma schema for persistence; realistic data utilities for live-like metrics.
+
+### AI Detection Details
+- Uses COCO-SSD pretrained object detection in the browser.
+- Filters predictions for e-waste-related classes and selects the highest-confidence match.
+- Provides transparent reasoning and detected objects to build user trust.
+
+### Data Flow (High-Level)
+1. User uploads an image in Waste Detection.
+2. COCO-SSD runs in-browser and returns predictions.
+3. Predictions are filtered to e-waste classes and scored.
+4. Result and reasoning are displayed along with estimated value/points.
+5. User can proceed to rewards or bin-finder actions.
+
+### Feasibility and Reliability
+- Runs entirely on standard web hardware with no custom device requirements.
+- Build and deployment are standard Next.js workflows.
+- Client-side inference avoids server GPU costs and scales per user session.
+
+### Metrics and Evaluation (Demo)
+- **Build Health**: `npm run build` succeeds.
+- **Runtime UX**: Detection results, bin discovery, and rewards flows are interactive and responsive.
+- **Example Metrics Shown in UI**: live-like bin fill levels, timestamps, and engagement stats generated via realistic data utilities.
+
+### Security and Privacy
+- No user images are sent to external inference services by default.
+- Standard Next.js security best practices and environment-based secrets handling.
+
+### Accessibility and Inclusion
+- Responsive layouts for mobile and desktop.
+- Clear contrast and readable typography for critical results and calls-to-action.
+
+### Demo Walkthrough (Judges)
+1. Open the homepage and navigate to Waste Detection.
+2. Upload an image of a phone or laptop to see detected type and confidence.
+3. Visit Bin Finder to locate nearby bins and filter by accepted items.
+4. Open Rewards to view achievements and redeemable items.
+5. Check the Admin dashboard for system-wide metrics.
+
+### Roadmap
+- Integrate real-time sensor data from IoT bins.
+- Add verified recycling partner APIs for true availability.
+- Expand model support for more device types and batteries.
+
 ## 🏆 Features
 
 ### 🗺️ Location-Based Bin Finder
