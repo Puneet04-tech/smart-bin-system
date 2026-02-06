@@ -64,109 +64,44 @@ function analyzeImageForEWaste(imageData: string): {
   confidence: number;
   reasoning: string[];
 } {
-  // For demonstration purposes, we'll use a more deterministic approach
-  // In production, this would use a real ML model with actual image analysis
+  // IMPORTANT: This is a DEMO/MOCK implementation
+  // In production, integrate with a real AI service like:
+  // - Google Cloud Vision API
+  // - AWS Rekognition
+  // - Azure Computer Vision
+  // - OpenAI Vision API (GPT-4 Vision)
+  // - Custom trained TensorFlow/PyTorch model
   
-  // Create a hash from the image data to make detection deterministic
-  const imageHash = imageData.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const randomSeed = imageHash % 100;
+  console.log('⚠️ MOCK AI Detection - Not using real image analysis');
+  console.log('📝 For production: Integrate with real AI vision API');
   
-  console.log('AI Analysis - Image hash:', imageHash, 'Seed:', randomSeed);
-  
-  // Simulate basic image analysis with more realistic logic
-  const analysis = {
-    // Use the seed to make detection more predictable
-    hasElectronicFeatures: randomSeed > 30, // 70% chance of having electronic features (increased)
-    hasRectangularShape: randomSeed > 20, // 80% chance (increased - many items are rectangular)
-    hasScreenOrDisplay: randomSeed > 70, // 30% chance (increased)
-    hasPortsOrConnectors: randomSeed > 60, // 40% chance (increased)
-    hasCablesOrWires: randomSeed > 70, // 30% chance (increased)
-    hasButtonsOrControls: randomSeed > 50, // 50% chance (increased)
-    imageQuality: randomSeed > 10, // 90% chance of good quality
-    // Lower chance of detecting non-e-waste (people, thermos, etc.)
-    containsPerson: randomSeed < 20, // 20% chance of containing person (reduced)
-    containsNonEWaste: randomSeed < 30 // 30% chance of non-e-waste (reduced)
-  };
-
-  console.log('AI Analysis - Features:', analysis);
-
-  // If image clearly contains non-e-waste items, reject it
-  if (analysis.containsPerson || analysis.containsNonEWaste) {
-    console.log('AI Analysis - REJECTED: Contains non-e-waste items');
-    return {
-      isEWaste: false,
-      confidence: 0.95,
-      reasoning: [
-        'Image contains non-electronic items',
-        analysis.containsPerson ? 'Person detected in image - not e-waste' : 'Non-e-waste objects detected (e.g., thermos, bottles, food)',
-        'Please upload only electronic waste items',
-        'Common e-waste: phones, laptops, batteries, chargers, cables, monitors',
-        'Items like thermos, bottles, clothing, or food are not electronic waste'
-      ]
-    };
-  }
-
-  // Calculate e-waste likelihood based on features
-  const eWasteScore = [
-    analysis.hasElectronicFeatures ? 0.3 : 0,
-    analysis.hasRectangularShape ? 0.15 : 0,
-    analysis.hasScreenOrDisplay ? 0.25 : 0,
-    analysis.hasPortsOrConnectors ? 0.2 : 0,
-    analysis.hasCablesOrWires ? 0.15 : 0,
-    analysis.hasButtonsOrControls ? 0.1 : 0
-  ].reduce((a, b) => a + b, 0);
-
-  console.log('AI Analysis - E-waste score:', eWasteScore);
-
-  // Lower threshold for e-waste detection (more lenient)
-  if (eWasteScore < 0.3) {
-    console.log('AI Analysis - REJECTED: Low e-waste score (< 0.3)');
-    return {
-      isEWaste: false,
-      confidence: 0.85,
-      reasoning: [
-        'Low confidence in e-waste detection',
-        'Image lacks typical electronic device features',
-        'Cannot identify electronic components like screens, ports, or cables',
-        'Please ensure the image shows a clear electronic device',
-        'Try uploading: phone, laptop, battery, charger, or other electronic device'
-      ]
-    };
-  }
-
-  // Detect specific e-waste type
-  const types = Object.keys(wasteTypeModels);
-  let detectedType = types[0]; // Default to first type
-  let maxConfidence = 0;
-
-  for (const type of types) {
-    const model = wasteTypeModels[type as keyof typeof wasteTypeModels];
-    // Use seed + type hash for more deterministic type detection
-    const typeHash = (randomSeed + type.length) % 100;
-    const typeConfidence = model.confidence * (0.95 + (typeHash / 2000)); // Small variance, higher baseline
-    if (typeConfidence > maxConfidence) {
-      maxConfidence = typeConfidence;
-      detectedType = type;
-    }
-  }
-
-  console.log('AI Analysis - DETECTED:', detectedType, 'Confidence:', maxConfidence);
-
-  const reasoning = [
-    `Detected ${detectedType} with ${(maxConfidence * 100).toFixed(0)}% confidence`,
-    'Electronic device features identified',
-    wasteTypeModels[detectedType as keyof typeof wasteTypeModels].visualIndicators.map(
-      indicator => `${indicator} characteristics detected`
-    )[0] || 'Device form factor analyzed',
-    analysis.imageQuality ? 'Image quality sufficient for analysis' : 'Image quality affects accuracy',
-    maxConfidence > 0.9 ? 'High confidence in e-waste classification' : 'Manual verification recommended'
-  ];
-
+  // Since this is a mock without real AI, reject all items by default
+  // This makes it clear that real AI integration is needed
   return {
-    isEWaste: true,
-    detectedType,
-    confidence: Math.min(0.99, Math.max(0.75, maxConfidence)),
-    reasoning
+    isEWaste: false,
+    confidence: 0.85,
+    reasoning: [
+      '⚠️ DEMO MODE: Real AI detection not configured',
+      'This feature requires integration with an AI vision service',
+      '',
+      '🔧 To enable real e-waste detection:',
+      '1. Choose an AI service (Google Vision, AWS Rekognition, OpenAI, etc.)',
+      '2. Add API credentials to environment variables',
+      '3. Implement actual image classification logic',
+      '4. Train or use pre-trained model for e-waste recognition',
+      '',
+      '📱 What the system should detect:',
+      '• Smartphones, tablets, laptops',
+      '• Batteries, chargers, cables',
+      '• Monitors, keyboards, mice',
+      '• Other electronic devices',
+      '',
+      '❌ What should be rejected:',
+      '• Water bottles, thermos, cups',
+      '• Clothing, furniture, food',
+      '• Non-electronic items',
+      '• People, pets, plants'
+    ]
   };
 }
 

@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
 }
 
 datasource db {
@@ -69,12 +69,14 @@ model Transaction {
 }
 
 model Achievement {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String
   icon        String
   points      Int
-  requirement String // JSON object describing requirements
+  requirement String   // JSON object describing requirements
+  rarity      String   @default("common") // common, uncommon, rare, epic, legendary
+  createdAt   DateTime @default(now())
   
   users       UserAchievement[]
   
@@ -86,12 +88,39 @@ model UserAchievement {
   userId         String
   achievementId  String
   unlockedAt     DateTime  @default(now())
+  progress       Int       @default(0)
   
   user           User      @relation(fields: [userId], references: [id])
   achievement    Achievement @relation(fields: [achievementId], references: [id])
   
   @@unique([userId, achievementId])
   @@map("user_achievements")
+}
+
+model Reward {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  pointsCost  Int
+  category    String
+  partner     String
+  available   Boolean @default(true)
+  createdAt   DateTime @default(now())
+  
+  claims      RewardClaim[]
+  
+  @@map("rewards")
+}
+
+model RewardClaim {
+  id         String   @id @default(cuid())
+  userId     String
+  rewardId   String
+  claimedAt  DateTime @default(now())
+  
+  reward     Reward   @relation(fields: [rewardId], references: [id])
+  
+  @@map("reward_claims")
 }
 
 model Maintenance {
@@ -106,19 +135,6 @@ model Maintenance {
   bin         Bin      @relation(fields: [binId], references: [id])
   
   @@map("maintenance")
-}
-
-model Reward {
-  id          String  @id @default(cuid())
-  title       String
-  description String
-  pointsCost  Int
-  type        String  // discount, voucher, product
-  partner     String?
-  imageUrl    String?
-  active      Boolean @default(true)
-  
-  @@map("rewards")
 }
 
 model Session {

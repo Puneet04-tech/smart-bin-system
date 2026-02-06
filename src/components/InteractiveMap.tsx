@@ -69,7 +69,7 @@ export default function InteractiveMap({ bins, userLocation, selectedBin, onBinS
             <div class="relative w-full h-96 rounded-xl overflow-hidden border-2 border-green-500/20">
               <div class="absolute inset-0 gradient-ewaste opacity-90"></div>
               <div class="absolute inset-0 flex items-center justify-center">
-                <div class="text-center text-white p-8 glass-ewaste rounded-xl">
+                <div class="text-center text-green-100 p-8 glass-ewaste rounded-xl">
                   <div class="animate-rotate mb-6">
                     <div class="w-20 h-20 mx-auto border-4 border-white/30 border-t-white rounded-full"></div>
                   </div>
@@ -106,7 +106,7 @@ export default function InteractiveMap({ bins, userLocation, selectedBin, onBinS
                 
                 return `
                   <div 
-                    class="absolute w-8 h-8 ${getStatusColor(bin.status)} border-3 border-white rounded-full shadow-xl transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 hover:scale-125 cursor-pointer flex items-center justify-center animate-float"
+                    class="absolute w-8 h-8 ${getStatusColor(bin.status)} border-3 border-green-300 rounded-full shadow-xl transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 hover:scale-125 cursor-pointer flex items-center justify-center animate-float"
                     style="top: ${y}%; left: ${x}%; z-index: ${bin === selectedBin ? 20 : 10};"
                     title="${bin.name} - ${bin.address} (${bin.status})"
                   >
@@ -118,7 +118,7 @@ export default function InteractiveMap({ bins, userLocation, selectedBin, onBinS
               <!-- User Location -->
               ${userLocation ? `
                 <div 
-                  class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 border-3 border-white rounded-full shadow-xl animate-pulse-glow"
+                  class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 border-3 border-green-300 rounded-full shadow-xl animate-pulse-glow"
                   style="z-index: 15;"
                   title="Your Location"
                 >
@@ -127,7 +127,7 @@ export default function InteractiveMap({ bins, userLocation, selectedBin, onBinS
               ` : ''}
               
               <!-- Legend -->
-              <div class="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-green-500/20">
+              <div class="absolute bottom-4 right-4 bg-green-50/95 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-green-500/20">
                 <h4 class="font-bold text-sm mb-3 text-gray-800">Bin Status</h4>
                 <div class="space-y-2">
                   <div class="flex items-center gap-2">

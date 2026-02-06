@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { AIRecommendations } from "@/components/AIRecommendations";
 import { 
   Trophy, 
   Star, 
@@ -31,31 +34,44 @@ import {
   Ticket,
   ChevronRight,
   Lock,
-  Unlock
+  Unlock,
+  CheckCircle,
+  Share2,
+  Menu,
+  X,
+  Home,
+  Monitor,
+  Shield
 } from "lucide-react";
 
 interface UserProfile {
+  id: string;
   name: string;
   email: string;
-  avatar: string;
   level: string;
   points: number;
   totalRecycled: number;
   co2Saved: number;
   joinDate: string;
   streak: number;
+  recentActivity: Array<{
+    item: string;
+    points: number;
+    time: string;
+  }>;
+  unlockedAchievements: number;
 }
 
 interface Achievement {
   id: string;
   title: string;
   description: string;
-  icon: React.ReactNode;
+  icon: string;
   points: number;
+  rarity: string;
   unlocked: boolean;
-  unlockedAt?: string;
+  unlockedDate?: string;
   progress?: number;
-  maxProgress?: number;
 }
 
 interface Reward {
@@ -65,174 +81,248 @@ interface Reward {
   pointsCost: number;
   category: string;
   partner: string;
-  image: string;
-  available: boolean;
   claimed?: boolean;
 }
 
-const mockUserProfile: UserProfile = {
-  name: "Alex Johnson",
-  email: "alex.johnson@email.com",
-  avatar: "/api/placeholder/100/100",
-  level: "Gold",
-  points: 2840,
-  totalRecycled: 47,
-  co2Saved: 12.5,
-  joinDate: "January 2024",
-  streak: 12
+// Helper function to get icon component
+const getIconComponent = (iconName: string) => {
+  const icons: { [key: string]: React.ReactNode } = {
+    'Trophy': <Trophy className="w-6 h-6" />,
+    'Zap': <Zap className="w-6 h-6" />,
+    'Award': <Award className="w-6 h-6" />,
+    'Leaf': <Leaf className="w-6 h-6" />,
+    'Flame': <Flame className="w-6 h-6" />,
+    'Crown': <Crown className="w-6 h-6" />,
+    'Target': <Target className="w-6 h-6" />,
+    'Smartphone': <Smartphone className="w-6 h-6" />,
+    'Battery': <Battery className="w-6 h-6" />,
+    'MapPin': <MapPin className="w-6 h-6" />,
+  };
+  return icons[iconName] || <Trophy className="w-6 h-6" />;
 };
 
-const mockAchievements: Achievement[] = [
-  {
-    id: "1",
-    title: "First Recycler",
-    description: "Complete your first e-waste recycling",
-    icon: <Trophy className="w-6 h-6" />,
-    points: 50,
-    unlocked: true,
-    unlockedAt: "2024-01-15"
-  },
-  {
-    id: "2",
-    title: "Smartphone Specialist",
-    description: "Recycle 10 smartphones",
-    icon: <Smartphone className="w-6 h-6" />,
-    points: 200,
-    unlocked: true,
-    unlockedAt: "2024-02-20"
-  },
-  {
-    id: "3",
-    title: "Eco Warrior",
-    description: "Save 10kg of CO2",
-    icon: <Leaf className="w-6 h-6" />,
-    points: 300,
-    unlocked: true,
-    unlockedAt: "2024-03-10"
-  },
-  {
-    id: "4",
-    title: "Streak Master",
-    description: "Maintain a 30-day recycling streak",
-    icon: <Flame className="w-6 h-6" />,
-    points: 500,
-    unlocked: false,
-    progress: 12,
-    maxProgress: 30
-  },
-  {
-    id: "5",
-    title: "Century Club",
-    description: "Recycle 100 items total",
-    icon: <Target className="w-6 h-6" />,
-    points: 1000,
-    unlocked: false,
-    progress: 47,
-    maxProgress: 100
-  },
-  {
-    id: "6",
-    title: "Bin Explorer",
-    description: "Use 20 different recycling bins",
-    icon: <MapPin className="w-6 h-6" />,
-    points: 400,
-    unlocked: false,
-    progress: 8,
-    maxProgress: 20
-  }
-];
-
-const mockRewards: Reward[] = [
-  {
-    id: "1",
-    title: "Coffee Shop Voucher",
-    description: "$5 off at Green Bean Coffee",
-    pointsCost: 500,
-    category: "Food & Drink",
-    partner: "Green Bean Coffee",
-    image: "/api/placeholder/200/150",
-    available: true
-  },
-  {
-    id: "2",
-    title: "Eco Store Discount",
-    description: "20% off sustainable products",
-    pointsCost: 800,
-    category: "Shopping",
-    partner: "EcoMart",
-    image: "/api/placeholder/200/150",
-    available: true
-  },
-  {
-    id: "3",
-    title: "Tech Store Credit",
-    description: "$10 credit at TechZone",
-    pointsCost: 1200,
-    category: "Electronics",
-    partner: "TechZone",
-    image: "/api/placeholder/200/150",
-    available: true
-  },
-  {
-    id: "4",
-    title: "Plant a Tree",
-    description: "Contribute to reforestation",
-    pointsCost: 2000,
-    category: "Environmental",
-    partner: "One Tree Planted",
-    image: "/api/placeholder/200/150",
-    available: false
-  },
-  {
-    id: "5",
-    title: "Movie Ticket",
-    description: "Free movie ticket at CineMax",
-    pointsCost: 1500,
-    category: "Entertainment",
-    partner: "CineMax",
-    image: "/api/placeholder/200/150",
-    available: true
-  },
-  {
-    id: "6",
-    title: "Public Transport Pass",
-    description: "7-day transit pass",
-    pointsCost: 3000,
-    category: "Transport",
-    partner: "City Transit",
-    image: "/api/placeholder/200/150",
-    available: false
-  }
-];
-
 const levelColors = {
-  Bronze: "bg-amber-100 text-amber-800 border-amber-200",
-  Silver: "bg-gray-100 text-gray-800 border-gray-200",
-  Gold: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  Platinum: "bg-purple-100 text-purple-800 border-purple-200"
+  bronze: "bg-amber-100 text-amber-800 border-amber-200",
+  silver: "bg-gray-100 text-gray-800 border-gray-200",
+  gold: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  platinum: "bg-purple-100 text-purple-800 border-purple-200"
 };
 
 const levelIcons = {
-  Bronze: <Medal className="w-5 h-5" />,
-  Silver: <Award className="w-5 h-5" />,
-  Gold: <Crown className="w-5 h-5" />,
-  Platinum: <Gem className="w-5 h-5" />
+  bronze: <Medal className="w-5 h-5" />,
+  silver: <Award className="w-5 h-5" />,
+  gold: <Crown className="w-5 h-5" />,
+  platinum: <Gem className="w-5 h-5" />
 };
 
 export default function RewardsPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
 
+  const userProfile: UserProfile = {
+    id: "usr_2847xm9p",
+    name: "Eco Warrior",
+    email: "user@smartbin.com",
+    level: "gold",
+    points: 2840,
+    totalRecycled: 156,
+    co2Saved: 390,
+    joinDate: "2024-01-15",
+    streak: 7,
+    recentActivity: [
+      { item: "E-Waste Bin Deposit", points: 150, time: "2h ago" },
+      { item: "Battery Recycling", points: 80, time: "1d ago" },
+      { item: "Mobile Phone Recycled", points: 200, time: "3d ago" }
+    ],
+    unlockedAchievements: 8
+  };
+
+  const achievements: Achievement[] = [
+    {
+      id: "ach-1",
+      title: "First Steps",
+      description: "Complete your first recycling transaction",
+      icon: "Leaf",
+      points: 100,
+      rarity: "common",
+      unlocked: true,
+      unlockedDate: "2024-01-20",
+      progress: 100
+    },
+    {
+      id: "ach-2",
+      title: "Eco Warrior",
+      description: "Recycle 50 items",
+      icon: "Award",
+      points: 500,
+      rarity: "rare",
+      unlocked: true,
+      unlockedDate: "2024-02-10",
+      progress: 100
+    },
+    {
+      id: "ach-3",
+      title: "Green Champion",
+      description: "Recycle 100 items",
+      icon: "Trophy",
+      points: 1000,
+      rarity: "epic",
+      unlocked: false,
+      progress: 80
+    },
+    {
+      id: "ach-4",
+      title: "Streak Master",
+      description: "Maintain a 7-day streak",
+      icon: "Flame",
+      points: 300,
+      rarity: "uncommon",
+      unlocked: true,
+      unlockedDate: "2024-02-25",
+      progress: 100
+    },
+    {
+      id: "ach-5",
+      title: "Tech Recycler",
+      description: "Recycle 10 electronic items",
+      icon: "Smartphone",
+      points: 400,
+      rarity: "uncommon",
+      unlocked: false,
+      progress: 60
+    },
+    {
+      id: "ach-6",
+      title: "Community Leader",
+      description: "Refer 5 friends",
+      icon: "Crown",
+      points: 600,
+      rarity: "rare",
+      unlocked: false,
+      progress: 40
+    }
+  ];
+
+  const rewards: Reward[] = [
+    {
+      id: "reward-1",
+      title: "₹500 Amazon Voucher",
+      description: "Shop sustainable products on Amazon",
+      pointsCost: 2500,
+      category: "shopping",
+      partner: "Amazon",
+      claimed: false
+    },
+    {
+      id: "reward-2",
+      title: "₹300 Flipkart Gift Card",
+      description: "Get a Flipkart gift card for your eco-friendly purchases",
+      pointsCost: 1500,
+      category: "shopping",
+      partner: "Flipkart",
+      claimed: false
+    },
+    {
+      id: "reward-3",
+      title: "Plant 10 Trees",
+      description: "We will plant 10 trees in your name through our NGO partners",
+      pointsCost: 1000,
+      category: "environment",
+      partner: "GreenEarth Foundation",
+      claimed: false
+    },
+    {
+      id: "reward-4",
+      title: "Free E-Waste Pickup",
+      description: "Schedule a free home pickup for your e-waste",
+      pointsCost: 500,
+      category: "service",
+      partner: "SmartBin",
+      claimed: false
+    },
+    {
+      id: "reward-5",
+      title: "₹200 Swiggy Voucher",
+      description: "Order food from eco-friendly restaurants",
+      pointsCost: 1000,
+      category: "food",
+      partner: "Swiggy",
+      claimed: false
+    },
+    {
+      id: "reward-6",
+      title: "Movie Tickets (2x)",
+      description: "Enjoy a movie with a friend at PVR Cinemas",
+      pointsCost: 800,
+      category: "entertainment",
+      partner: "BookMyShow",
+      claimed: false
+    }
+  ];
+
+  const handleClaimReward = (rewardId: string) => {
+    const reward = rewards.find(r => r.id === rewardId);
+    if (!reward) return;
+
+    if (userProfile.points < reward.pointsCost) {
+      toast.error("Insufficient Points", {
+        description: "You don't have enough points to claim this reward!",
+      });
+      return;
+    }
+
+    toast.success("Reward Claimed!", {
+      description: `Successfully claimed ${reward.title}! Check your email for redemption details.`,
+    });
+  };
+
+  const handleShareAchievement = () => {
+    const shareData = {
+      title: 'My E-Waste Recycling Impact 🌱',
+      text: `I've recycled ${userProfile.totalRecycled} items and saved ${userProfile.co2Saved}kg of CO₂! Join me in making a difference with Smart E-Waste Bin System. #EcoWarrior #Recycling #Sustainability`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData)
+        .then(() => {
+          toast.success("Shared Successfully!", {
+            description: "Thank you for spreading the word!",
+          });
+        })
+        .catch(() => {
+          copyToClipboard(shareData.text);
+        });
+    } else {
+      copyToClipboard(shareData.text);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        toast.success("Copied to Clipboard!", {
+          description: "Achievement text copied. Share it on your social media!",
+        });
+      })
+      .catch(() => {
+        toast.error("Copy Failed", {
+          description: "Unable to copy. Please try again.",
+        });
+      });
+  };
+
   const getNextLevel = (currentLevel: string) => {
-    const levels = ["Bronze", "Silver", "Gold", "Platinum"];
-    const currentIndex = levels.indexOf(currentLevel);
+    const levels = ["bronze", "silver", "gold", "platinum"];
+    const currentIndex = levels.indexOf(currentLevel.toLowerCase());
     return currentIndex < levels.length - 1 ? levels[currentIndex + 1] : null;
   };
 
-  const getLevelProgress = (points: number) => {
-    const thresholds = { Bronze: 0, Silver: 1000, Gold: 2500, Platinum: 5000 };
-    const currentThreshold = thresholds[mockUserProfile.level as keyof typeof thresholds];
-    const nextLevel = getNextLevel(mockUserProfile.level);
+  const getLevelProgress = (points: number, level: string) => {
+    const thresholds = { bronze: 0, silver: 1000, gold: 2500, platinum: 5000 };
+    const currentThreshold = thresholds[level.toLowerCase() as keyof typeof thresholds];
+    const nextLevel = getNextLevel(level);
     
     if (!nextLevel) return 100;
     
@@ -242,84 +332,193 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50">
+    <div className="page-gradient-blue">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-white" />
+      <nav style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 50, 
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ 
+                width: '40px', 
+                height: '40px', 
+                background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', 
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Trophy className="w-6 h-6" style={{ color: 'white' }} />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+              <span style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
                 Rewards & Achievements
               </span>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => window.history.back()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <ThemeToggle />
+              <Button 
+                variant="ghost" 
+                onClick={() => window.history.back()}
+                style={{ padding: '8px 16px', borderRadius: '8px' }}
+                className="desktop-only"
+              >
                 Back
               </Button>
+              <button 
+                className="mobile-nav-toggle"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle menu"
+                style={{ background: 'none', border: 'none', color: '#16a34a', cursor: 'pointer', padding: '8px' }}
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
             </div>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="mobile-nav">
+          <div className="mobile-nav-links">
+            <button onClick={() => { window.location.href = "/"; setMobileMenuOpen(false); }}>
+              <Home size={20} />
+              <span>Home</span>
+            </button>
+            <button onClick={() => { window.location.href = "/waste-detection"; setMobileMenuOpen(false); }}>
+              <Monitor size={20} />
+              <span>Waste Detection</span>
+            </button>
+            <button onClick={() => { window.location.href = "/bin-finder"; setMobileMenuOpen(false); }}>
+              <MapPin size={20} />
+              <span>Bin Finder</span>
+            </button>
+            <button onClick={() => { window.location.href = "/rewards"; setMobileMenuOpen(false); }}>
+              <Shield size={20} />
+              <span>Rewards</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px' }}>
         {/* User Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          style={{ marginBottom: '32px' }}
         >
-          <Card className="bg-gradient-to-r from-emerald-500 to-blue-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
-                <Avatar className="w-24 h-24 border-4 border-white/20">
-                  <AvatarImage src={mockUserProfile.avatar} alt={mockUserProfile.name} />
-                  <AvatarFallback className="text-2xl bg-white/20">
-                    {mockUserProfile.name.split(' ').map(n => n[0]).join('')}
+          <Card style={{ 
+            background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', 
+            color: 'white',
+            border: 'none',
+            boxShadow: '0 20px 40px rgba(16, 185, 129, 0.3)'
+          }}>
+            <CardContent style={{ padding: '32px' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                gap: '24px',
+                flexWrap: 'wrap'
+              }}>
+                <Avatar style={{ width: '96px', height: '96px', border: '4px solid rgba(255,255,255,0.3)' }}>
+                  <AvatarFallback style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)' }}>
+                    {userProfile.name.split(' ').map((n: string) => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 
-                <div className="flex-1 text-center md:text-left">
-                  <h1 className="text-3xl font-bold mb-2">{mockUserProfile.name}</h1>
-                  <p className="text-white/80 mb-4">{mockUserProfile.email}</p>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>{userProfile.name}</h1>
+                  <p style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '16px' }}>{userProfile.email}</p>
                   
-                  <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-4">
-                    <div className="flex items-center space-x-2">
-                      {levelIcons[mockUserProfile.level as keyof typeof levelIcons]}
-                      <Badge className={`${levelColors[mockUserProfile.level as keyof typeof levelColors]} text-white border-none bg-white/20`}>
-                        {mockUserProfile.level} Level
-                      </Badge>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    justifyContent: 'flex-start',
+                    gap: '16px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '8px' }}>
+                      {levelIcons[userProfile.level.toLowerCase() as keyof typeof levelIcons]}
+                      <span style={{ textTransform: 'capitalize' }}>{userProfile.level} Level</span>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '8px' }}>
                       <Flame className="w-5 h-5" />
-                      <span>{mockUserProfile.streak} day streak</span>
+                      <span>{userProfile.streak} day streak</span>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '8px' }}>
                       <Calendar className="w-5 h-5" />
-                      <span>Joined {mockUserProfile.joinDate}</span>
+                      <span>Joined {userProfile.joinDate}</span>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold">{mockUserProfile.points.toLocaleString()}</p>
-                      <p className="text-white/80 text-sm">Points</p>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '16px', borderRadius: '12px' }}>
+                      <p style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '4px' }}>{userProfile.points.toLocaleString()}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>Points</p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold">{mockUserProfile.totalRecycled}</p>
-                      <p className="text-white/80 text-sm">Items Recycled</p>
+                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '16px', borderRadius: '12px' }}>
+                      <p style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '4px' }}>{userProfile.totalRecycled}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>Items Recycled</p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold">{mockUserProfile.co2Saved}kg</p>
-                      <p className="text-white/80 text-sm">CO₂ Saved</p>
+                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '16px', borderRadius: '12px' }}>
+                      <p style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '4px' }}>{userProfile.co2Saved}kg</p>
+                      <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>CO₂ Saved</p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold">{mockAchievements.filter(a => a.unlocked).length}</p>
-                      <p className="text-white/80 text-sm">Achievements</p>
+                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '16px', borderRadius: '12px' }}>
+                      <p style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '4px' }}>{userProfile.unlockedAchievements}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>Achievements</p>
                     </div>
                   </div>
+
+                  {/* Share Button */}
+                  <Button
+                    onClick={handleShareAchievement}
+                    style={{
+                      marginTop: '20px',
+                      background: 'white',
+                      color: '#10b981',
+                      fontWeight: '600',
+                      padding: '12px 24px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    }}
+                  >
+                    <Share2 className="w-5 h-5" />
+                    Share My Impact
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -331,27 +530,27 @@ export default function RewardsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-8"
+          style={{ marginBottom: '32px' }}
         >
-          <Card>
+          <Card style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5" />
+              <CardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <TrendingUp className="w-5 h-5" style={{ color: '#10b981' }} />
                 <span>Level Progress</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{mockUserProfile.level}</span>
-                  <span className="text-sm text-gray-600">
-                    {getNextLevel(mockUserProfile.level) ? `Next: ${getNextLevel(mockUserProfile.level)}` : "Max Level"}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: '600', fontSize: '16px', textTransform: 'capitalize' }}>{userProfile.level}</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                    {getNextLevel(userProfile.level) ? `Next: ${getNextLevel(userProfile.level)}` : "Max Level"}
                   </span>
                 </div>
-                <Progress value={getLevelProgress(mockUserProfile.points)} className="h-3" />
-                <p className="text-sm text-gray-600">
-                  {mockUserProfile.points.toLocaleString()} points • 
-                  {getNextLevel(mockUserProfile.level) && ` ${2500 - mockUserProfile.points} points to next level`}
+                <Progress value={getLevelProgress(userProfile.points, userProfile.level)} style={{ height: '12px' }} />
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                  {userProfile.points.toLocaleString()} points
+                  {getNextLevel(userProfile.level) && ` • ${2500 - userProfile.points} points to next level`}
                 </p>
               </div>
             </CardContent>
@@ -359,29 +558,42 @@ export default function RewardsPage() {
         </motion.div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="rewards">Rewards</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} style={{ marginTop: '24px' }}>
+          <TabsList style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            width: '100%',
+            background: 'white',
+            padding: '4px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
+            <TabsTrigger value="overview" style={{ borderRadius: '8px', padding: '12px' }}>Overview</TabsTrigger>
+            <TabsTrigger value="achievements" style={{ borderRadius: '8px', padding: '12px' }}>Achievements</TabsTrigger>
+            <TabsTrigger value="rewards" style={{ borderRadius: '8px', padding: '12px' }}>Rewards</TabsTrigger>
+            <TabsTrigger value="ai-insights" style={{ borderRadius: '8px', padding: '12px' }}>AI Insights</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+          <TabsContent value="overview" style={{ marginTop: '24px' }}>
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '24px'
+            }}>
               {/* Recent Activity */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card>
+                <Card style={{ height: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                   <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
                     <CardDescription>Your latest recycling actions</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {[
                         { item: "iPhone 12", points: 450, time: "2 hours ago", icon: Smartphone },
                         { item: "Laptop Battery", points: 85, time: "1 day ago", icon: Battery },
@@ -389,15 +601,23 @@ export default function RewardsPage() {
                       ].map((activity, index) => {
                         const Icon = activity.icon;
                         return (
-                          <div key={index} className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                              <Icon className="w-5 h-5 text-emerald-600" />
+                          <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#f9fafb', borderRadius: '12px' }}>
+                            <div style={{ 
+                              width: '40px', 
+                              height: '40px', 
+                              background: '#d1fae5', 
+                              borderRadius: '10px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <Icon className="w-5 h-5" style={{ color: '#10b981' }} />
                             </div>
-                            <div className="flex-1">
-                              <p className="font-medium">Recycled {activity.item}</p>
-                              <p className="text-sm text-gray-600">{activity.time}</p>
+                            <div style={{ flex: 1 }}>
+                              <p style={{ fontWeight: '600', marginBottom: '4px' }}>Recycled {activity.item}</p>
+                              <p style={{ fontSize: '14px', color: '#6b7280' }}>{activity.time}</p>
                             </div>
-                            <Badge className="bg-emerald-100 text-emerald-800">
+                            <Badge style={{ background: '#d1fae5', color: '#047857', border: 'none', padding: '4px 12px', borderRadius: '8px' }}>
                               +{activity.points} pts
                             </Badge>
                           </div>
@@ -414,39 +634,54 @@ export default function RewardsPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Card>
+                <Card style={{ height: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
+                    <CardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Users className="w-5 h-5" />
                       <span>Leaderboard</span>
                     </CardTitle>
                     <CardDescription>Top recyclers this month</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {[
                         { rank: 1, name: "Sarah Chen", points: 5230, change: "up" },
                         { rank: 2, name: "Mike Johnson", points: 4890, change: "up" },
-                        { rank: 3, name: "You", points: 2840, change: "same", highlight: true },
-                        { rank: 4, name: "Emma Davis", points: 2650, change: "down" },
-                        { rank: 5, name: "James Wilson", points: 2420, change: "up" }
-                      ].map((user) => (
-                        <div key={user.rank} className={`flex items-center space-x-3 p-2 rounded-lg ${user.highlight ? 'bg-emerald-50' : ''}`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                            user.rank === 1 ? 'bg-yellow-500 text-white' :
-                            user.rank === 2 ? 'bg-gray-400 text-white' :
-                            user.rank === 3 ? 'bg-amber-600 text-white' :
-                            'bg-gray-200 text-gray-700'
-                          }`}>
+                        { rank: 3, name: "Alex Johnson (You)", points: 2840, change: "up" }
+                      ].map((user, index) => (
+                        <div 
+                          key={index} 
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '12px',
+                            padding: '12px',
+                            background: user.name.includes("You") ? '#ecfdf5' : '#f9fafb',
+                            borderRadius: '12px',
+                            border: user.name.includes("You") ? '2px solid #10b981' : 'none'
+                          }}
+                        >
+                          <div style={{ 
+                            width: '40px',
+                            height: '40px',
+                            background: index === 0 ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' : 
+                                       index === 1 ? 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' : 
+                                       'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '18px'
+                          }}>
                             {user.rank}
                           </div>
-                          <div className="flex-1">
-                            <p className={`font-medium ${user.highlight ? 'text-emerald-700' : ''}`}>{user.name}</p>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontWeight: '600', marginBottom: '2px' }}>{user.name}</p>
+                            <p style={{ fontSize: '14px', color: '#6b7280' }}>{user.points.toLocaleString()} points</p>
                           </div>
-                          <div className="text-right">
-                            <p className="font-semibold">{user.points.toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">points</p>
-                          </div>
+                          <TrendingUp style={{ color: '#10b981', width: '20px', height: '20px' }} />
                         </div>
                       ))}
                     </div>
@@ -457,130 +692,230 @@ export default function RewardsPage() {
           </TabsContent>
 
           {/* Achievements Tab */}
-          <TabsContent value="achievements" className="space-y-6">
+          <TabsContent value="achievements" style={{ marginTop: '24px' }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockAchievements.map((achievement, index) => (
+              <div style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '20px'
+              }}>
+                {achievements.map((achievement, index) => {
+                  const rarityColors: { [key: string]: string } = {
+                    common: '#9ca3af',
+                    uncommon: '#10b981',
+                    rare: '#3b82f6',
+                    epic: '#8b5cf6',
+                    legendary: '#f59e0b'
+                  };
+                  const rarityBg: { [key: string]: string } = {
+                    common: '#f3f4f6',
+                    uncommon: '#d1fae5',
+                    rare: '#dbeafe',
+                    epic: '#ede9fe',
+                    legendary: '#fef3c7'
+                  };
+                  
+                  return (
                   <motion.div
                     key={achievement.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className={`h-full ${achievement.unlocked ? 'border-emerald-200 bg-emerald-50/50' : 'border-gray-200'}`}>
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                            achievement.unlocked ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-400'
-                          }`}>
-                            {achievement.icon}
-                          </div>
-                          <div className="text-right">
-                            <Badge className={achievement.unlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}>
-                              {achievement.unlocked ? 'Unlocked' : 'Locked'}
-                            </Badge>
-                            <p className="text-sm font-semibold mt-1">+{achievement.points} pts</p>
-                          </div>
+                    <Card style={{ 
+                      height: '100%',
+                      boxShadow: achievement.unlocked ? '0 4px 20px rgba(16, 185, 129, 0.2)' : '0 4px 12px rgba(0,0,0,0.1)',
+                      background: achievement.unlocked ? 'linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)' : '#f9fafb',
+                      border: achievement.unlocked ? '2px solid #10b981' : '1px solid #e5e7eb',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      {achievement.unlocked && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          background: '#10b981',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <CheckCircle style={{ width: '14px', height: '14px' }} />
+                          Unlocked
                         </div>
-                        <CardTitle className="text-lg">{achievement.title}</CardTitle>
-                        <CardDescription>{achievement.description}</CardDescription>
-                      </CardHeader>
-                      {achievement.progress && achievement.maxProgress && (
-                        <CardContent>
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span>Progress</span>
-                              <span>{achievement.progress}/{achievement.maxProgress}</span>
-                            </div>
-                            <Progress value={(achievement.progress / achievement.maxProgress) * 100} className="h-2" />
-                          </div>
-                          {achievement.unlocked && achievement.unlockedAt && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              Unlocked on {new Date(achievement.unlockedAt).toLocaleDateString()}
-                            </p>
-                          )}
-                        </CardContent>
                       )}
+                      <CardContent style={{ padding: '24px', textAlign: 'center' }}>
+                        <div style={{
+                          width: '64px',
+                          height: '64px',
+                          margin: '0 auto 16px',
+                          background: achievement.unlocked ? 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)' : '#e5e7eb',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: achievement.unlocked ? 'white' : '#9ca3af'
+                        }}>
+                          {getIconComponent(achievement.icon)}
+                        </div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: achievement.unlocked ? '#047857' : '#6b7280' }}>
+                          {achievement.title}
+                        </h3>
+                        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
+                          {achievement.description}
+                        </p>
+                        {typeof achievement.progress === 'number' && achievement.progress > 0 && achievement.progress < 100 && (
+                          <div style={{ marginTop: '12px' }}>
+                            <Progress value={achievement.progress} style={{ height: '8px' }} />
+                            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                              {achievement.progress}% complete
+                            </p>
+                          </div>
+                        )}
+                        <Badge style={{
+                          marginTop: '12px',
+                          background: rarityBg[achievement.rarity] || '#f3f4f6',
+                          color: rarityColors[achievement.rarity] || '#6b7280',
+                          border: 'none',
+                          padding: '6px 12px',
+                          textTransform: 'capitalize'
+                        }}>
+                          <Star style={{ width: '14px', height: '14px', marginRight: '4px' }} />
+                          {achievement.rarity} • {achievement.points} points
+                        </Badge>
+                        {achievement.unlocked && achievement.unlockedDate && (
+                          <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+                            Unlocked {new Date(achievement.unlockedDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </CardContent>
                     </Card>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           </TabsContent>
 
           {/* Rewards Tab */}
-          <TabsContent value="rewards" className="space-y-6">
+          <TabsContent value="rewards" style={{ marginTop: '24px' }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockRewards.map((reward, index) => (
+              <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>Redeem Your Points</h3>
+                <p style={{ color: '#6b7280' }}>You have {userProfile.points.toLocaleString()} points available</p>
+              </div>
+              
+              <div style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '24px'
+              }}>
+                {rewards.map((reward, index) => {
+                  const canClaim = userProfile.points >= reward.pointsCost && !reward.claimed;
+                  
+                  return (
                   <motion.div
                     key={reward.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="h-full hover:shadow-lg transition-shadow">
-                      <div className="relative">
-                        <div className="h-32 bg-gray-100 rounded-t-lg flex items-center justify-center">
-                          <Gift className="w-12 h-12 text-gray-400" />
+                    <Card style={{ 
+                      height: '100%',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      {reward.claimed && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          background: '#10b981',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          zIndex: 10
+                        }}>
+                          <CheckCircle style={{ width: '12px', height: '12px' }} />
+                          Claimed
                         </div>
-                        {!reward.available && (
-                          <div className="absolute top-2 right-2">
-                            <Badge className="bg-red-100 text-red-800">
-                              <Lock className="w-3 h-3 mr-1" />
-                              Unavailable
-                            </Badge>
-                          </div>
-                        )}
-                        {reward.claimed && (
-                          <div className="absolute top-2 right-2">
-                            <Badge className="bg-green-100 text-green-800">
-                              <Unlock className="w-3 h-3 mr-1" />
-                              Claimed
-                            </Badge>
-                          </div>
-                        )}
+                      )}
+                      <div style={{ 
+                        height: '160px', 
+                        background: `linear-gradient(135deg, ${index % 3 === 0 ? '#10b981' : index % 3 === 1 ? '#3b82f6' : '#f59e0b'} 0%, ${index % 3 === 0 ? '#059669' : index % 3 === 1 ? '#2563eb' : '#d97706'} 100%)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        position: 'relative'
+                      }}>
+                        <Gift style={{ width: '64px', height: '64px', color: 'white', opacity: 0.9 }} />
                       </div>
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
+                      <CardHeader style={{ padding: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <CardTitle className="text-lg">{reward.title}</CardTitle>
-                            <CardDescription>{reward.description}</CardDescription>
+                            <CardTitle style={{ fontSize: '18px', marginBottom: '4px' }}>{reward.title}</CardTitle>
+                            <CardDescription style={{ fontSize: '14px' }}>{reward.description}</CardDescription>
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="outline">{reward.category}</Badge>
-                            <span className="text-sm text-gray-600">{reward.partner}</span>
+                      <CardContent style={{ padding: '0 16px 16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Badge variant="outline" style={{ padding: '4px 8px', textTransform: 'capitalize' }}>{reward.category}</Badge>
+                            <span style={{ fontSize: '14px', color: '#6b7280' }}>{reward.partner}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Zap className="w-4 h-4 text-emerald-600" />
-                              <span className="font-semibold">{reward.pointsCost} points</span>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <Zap style={{ width: '16px', height: '16px', color: '#10b981' }} />
+                              <span style={{ fontWeight: '700', fontSize: '18px', color: '#111827' }}>{reward.pointsCost} points</span>
                             </div>
                             <Button 
                               size="sm" 
-                              disabled={!reward.available || mockUserProfile.points < reward.pointsCost || reward.claimed}
-                              className="bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700"
+                              disabled={!canClaim}
+                              onClick={() => handleClaimReward(reward.id)}
+                              style={{ 
+                                background: canClaim ? 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)' : '#e5e7eb',
+                                color: canClaim ? 'white' : '#9ca3af',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                cursor: canClaim ? 'pointer' : 'not-allowed'
+                              }}
                             >
-                              {reward.claimed ? 'Claimed' : mockUserProfile.points >= reward.pointsCost ? 'Claim' : 'Insufficient Points'}
+                              {reward.claimed ? 'Claimed' : userProfile.points >= reward.pointsCost ? 'Claim' : 'Need More Points'}
                             </Button>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
+          </TabsContent>
+
+          {/* AI Insights Tab */}
+          <TabsContent value="ai-insights" style={{ marginTop: '24px' }}>
+            <AIRecommendations />
           </TabsContent>
         </Tabs>
       </div>
